@@ -1,5 +1,5 @@
 # NFDS_time_sampled_data
-Repository for Soni 2025: "Can ancient DNA and other forms of time-sampled data aid in the inference of negative frequency dependent selection?"
+<b>Repository for Soni 2025: "Can ancient DNA and other forms of time-sampled data aid in the inference of negative frequency dependent selection?"</b>
 
 
 Scripts directory contains SLiM scripts to run simulations to reproduce data for Figures 1-3, as well as R scripts to run ABC inference, and python script for calculating summary statistics from vcf files. Finally, plot_figures.ipynb contains jupyter notebook for plotting figures.
