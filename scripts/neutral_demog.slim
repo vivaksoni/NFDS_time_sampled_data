@@ -1,0 +1,177 @@
+initialize() {
+	 
+    defineGlobal("start", clock());
+	 defineConstant("scale", 1);
+    defineConstant("N", asInteger(10000 / scale));
+    defineConstant("Ncurr", asInteger(d_Ncurrent / scale));
+	 //defineConstant("var_age", 1000);
+   //Chromosome with 7 functional regoins, each comprised of 9 1317bp exons, 8 1520bp introns, and separated by a 4322bp intergenic region
+   //Total chromosome length: 198345
+   defineConstant("exonLength", 1317); //Ensembl data
+   defineConstant("exonsPerGene", 9); //Sakharkar et al. 2004
+   defineConstant("intronsPerGene", 8); //Sakharkar et al. 2004
+   defineConstant("intronLength", 1520); //Median length: Hube and Francastel (2015)
+   defineConstant("geneLength", (exonLength * exonsPerGene) + (intronLength * intronsPerGene));
+   defineConstant("intergenicLength", 4322); //Ensembl data
+   defineConstant("totalGenes", 1);
+    
+    defineConstant("burnIn", asInteger(10 * N)); // Length of burnin. BP is introduced immediately after burnin. (in N gens)
+    defineConstant("simEnd", asInteger((1.3 * N) + burnIn)); //Sim End is burnIn + 10N gens of bp segregating + 0.045N generations (simEnd is present day) 
+    defineConstant("samplingA", asInteger(simEnd - (1.25 * N))); 
+    defineConstant("samplingB", asInteger(simEnd - (1.2 * N))); 
+    defineConstant("samplingC", asInteger(simEnd - (1.195 * N))); 
+    defineConstant("samplingD", asInteger(simEnd - (1.19 * N))); 
+    defineConstant("samplingE", asInteger(simEnd - (1.18 * N))); 
+    defineConstant("samplingF", asInteger(simEnd - (1.15 * N))); 
+    defineConstant("samplingG", asInteger(simEnd - (1.125 * N))); 
+    defineConstant("samplingH", asInteger(simEnd - (1.1 * N))); 
+    defineConstant("samplingI", asInteger(simEnd - (0.995 * N)));
+    defineConstant("samplingJ", asInteger(simEnd - (0.695 * N)));
+    defineConstant("samplingK", asInteger(simEnd - (0.195 * N)));
+    
+	 initializeMutationType("m1", 0.5, "f", 0.0); //selectively neutral
+	 //initializeMutationType("m2", 0.5, "s", "return runif(1, -10/(N*2), -1/(N*2));"); //weakly deleterious (1<2Nes<10)
+	 //initializeMutationType("m3", 0.5, "s", "return runif(1, -100/(N*2), -10/(N*2));"); //moderately deleterious (10<2Nes<100)
+	 //initializeMutationType("m4", 0.5, "s", "return runif(1, -1000/(N*2), -100/(N*2));"); //strongly deleterious (100<2Nes<1000)
+	//MUTATION RATE//
+	mu = 2.5e-8;
+	initializeMutationRate(mu);
+	
+	// Genomic elements:
+	initializeGenomicElementType("g1", m1, 1.0); //intergenic
+	//initializeGenomicElementType("g2", m1, 1.0); //intron
+	//initializeGenomicElementType("g3", m1, 1.0); //exon
+	//initializeGenomicElementType("g3", c(m1, m2, m3, m4), c(d_f0, d_f1, d_f2, d_f3)); //exon
+	//initializeGenomicElementType("g4", m1, 1.0); //exon synonymous
+	initializeGenomicElement(g1, 0, 999999);
+
+	
+	rr = 1e-8;
+	initializeRecombinationRate(rr);
+
+}
+
+1 early() {
+    defineConstant("simID",getSeed()); // get seed in case of re-run
+    sim.addSubpop("p1", N); // 1e4 scaled by 100
+    community.rescheduleScriptBlock(s1, start=burnIn, end=burnIn);
+    community.rescheduleScriptBlock(s2, start=samplingA, end=samplingA);
+    community.rescheduleScriptBlock(s3, start=samplingB, end=samplingB);
+    community.rescheduleScriptBlock(s4, start=samplingC, end=samplingC);
+    community.rescheduleScriptBlock(s5, start=samplingD, end=samplingD);
+    community.rescheduleScriptBlock(s6, start=samplingE, end=samplingE);
+    community.rescheduleScriptBlock(s7, start=samplingF, end=samplingF);
+    community.rescheduleScriptBlock(s8, start=samplingG, end=samplingG);
+    community.rescheduleScriptBlock(s9, start=samplingH, end=samplingH);
+    community.rescheduleScriptBlock(s10, start=samplingI, end=samplingI);
+    community.rescheduleScriptBlock(s11, start=samplingJ, end=samplingJ);
+    community.rescheduleScriptBlock(s12, start=samplingK, end=samplingK);
+    community.rescheduleScriptBlock(s13, start=simEnd, end=simEnd);
+}
+
+
+s1 late(){
+        g = "n0.1";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+}
+
+
+s2 late(){
+	g = "n0.05";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+}
+
+
+s3 late(){
+	p1.setSubpopulationSize(Ncurr);
+	g = "0";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+}
+
+
+s4 late(){
+	g = "0.005";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+}
+
+s5 late(){
+	g = "0.01";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+}
+
+
+s6 late(){
+	g = "0.02";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+}
+
+
+s7 late(){
+	g = "0.05";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+}
+
+
+s8 late() {
+	g = "0.075";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+}
+
+
+
+s9 late() {
+	g = "0.1";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+}
+
+
+s10 late() {
+	g = "0.2";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+}
+
+
+s11 late() {
+	g = "0.5";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+
+}
+
+
+s12 late() {
+	g = "1";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+}
+
+
+s13 late() {
+	g = "1.195";
+   p1.outputVCFSample(20, F, "*", T, d_folder + "/" + g + "N_rep" + repID + ".vcf");
+   //print all fixed mutations
+   sim.outputFixedMutations(d_folder + "/" + g + "N_rep" + repID +  ".fixed", append=F);
+
+}

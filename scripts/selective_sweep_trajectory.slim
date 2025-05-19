@@ -1,0 +1,56 @@
+// Keywords: conditional sweep
+
+initialize() {
+	initializeMutationRate(1e-7);
+	initializeMutationType("m1", 0.5, "f", 0.0);
+	initializeMutationType("m2", 1.0, "f", d_s/(500*2));  // introduced mutation
+	initializeGenomicElementType("g1", m1, 1);
+	initializeGenomicElement(g1, 0, 99999);
+	initializeRecombinationRate(1e-8);
+}
+1 early() {
+	// save this run's identifier, used to save and restore
+	defineConstant("simID", getSeed());
+	
+	sim.addSubpop("p1", 10000);
+}
+5000 late() {
+	// save the state of the simulation
+	sim.outputFull(tempdir() + "slim_" + simID + ".txt");
+	
+	// introduce the sweep mutation
+	target = sample(p1.genomes, 1);
+	target.addNewDrawnMutation(m2, 50000);
+}
+5000:8000 late() {
+	if (sim.countOfMutationsOfType(m2) == 0)
+	{
+		fixed = (sum(sim.substitutions.mutationType == m2) == 1);
+		
+		if (fixed)
+		{
+			cat(simID + ": FIXED\n");
+
+		}
+		else
+		{
+			cat(simID + ": LOST - RESTARTING\n");
+			
+			// go back to tick 1000
+			sim.readFromPopulationFile(tempdir() + "slim_" + simID + ".txt");
+			
+			// start a newly seeded run
+			setSeed(rdunif(1, 0, asInteger(2^62) - 1));
+			
+			// re-introduce the sweep mutation
+			target = sample(p1.genomes, 1);
+			target.addNewDrawnMutation(m2, 50000);
+		}
+	}
+	if((sim.cycle-5000)%5==0){
+		mut = sim.mutationsOfType(m2);
+   	sim.outputMutations(mut, d_folder + "/" + d_s + "_rep" + d_repID + ".bs", append=T);
+   	g = sim.cycle-5000;
+   	p1.outputVCFSample(20, F, "*", T, d_folder + "/" + d_s + "_rep" + d_repID + "_" + g + ".vcf");
+	}
+}
