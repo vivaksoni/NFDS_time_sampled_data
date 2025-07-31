@@ -1,0 +1,77 @@
+// Keywords: conditional sweep
+
+initialize() {
+	initializeMutationRate(1e-7);
+	initializeMutationType("m1", 0.5, "f", 0.0);
+	initializeMutationType("m2", 0.5, "f", d_s/(500*2));  // introduced mutation
+	initializeGenomicElementType("g1", m1, 1);
+	initializeGenomicElement(g1, 0, 99999);
+	initializeRecombinationRate(1e-8);
+}
+1 early() {
+	// save this run's identifier, used to save and restore
+	defineConstant("simID", getSeed());
+	
+	sim.addSubpop("p1", 500);
+	sim.addSubpop("p2", 500);
+	p1.setMigrationRates(p2, 0.1);   // weak migration p2 -> p1
+	p2.setMigrationRates(p1, 0.1);   // strong migration p1 -> p2
+
+}
+
+	
+5000 late() {
+	// save the state of the simulation
+	sim.outputFull(tempdir() + "slim_" + simID + ".txt");
+	
+	// introduce the sweep mutation
+	target = sample(p1.haplosomes, 1);
+	target.addNewDrawnMutation(m2, 50000);
+}
+
+
+mutationEffect(m2, p2) { return 1/effect; }
+
+
+
+5000:6000 late() {
+	p1.setMigrationRates(p2, d_m);   // weak migration p2 -> p1
+	p2.setMigrationRates(p1, d_m);   // strong migration p1 -> p2
+	mut = sim.mutationsOfType(m2);
+	if (size(mut) == 1)
+	{
+		if (sim.mutationFrequencies(NULL, mut) > 0.1)
+		{
+			cat(simID + ": ESTABLISHED\n");
+			//community.deregisterScriptBlock(self);
+		}
+	}
+	else
+	{
+		cat(simID + ": LOST - RESTARTING\n");
+		
+			// go back to tick 1000
+			sim.readFromPopulationFile(tempdir() + "slim_" + simID + ".txt");
+		
+		// start a newly seeded run
+		setSeed(rdunif(1, 0, asInteger(2^62) - 1));
+		
+		// re-introduce the sweep mutation
+		target = sample(p1.haplosomes, 1);
+		target.addNewDrawnMutation(m2, 50000);
+	}
+	if((sim.cycle-5000)%5==0){
+		mut = sim.mutationsOfType(m2);
+   	sim.outputMutations(mut, d_folder + "/" + d_s + "_" + d_m + "_rep" + d_repID + ".bs", append=T);
+
+   	g = sim.cycle-5000;
+   	p1.outputVCFSample(20, F, "*", T, d_folder + "/" + d_s + "_" + d_m + "_p1_rep" + d_repID + "_" + g + ".vcf");
+   	p2.outputVCFSample(20, F, "*", T, d_folder + "/" + d_s + "_" + d_m + "_p2_rep" + d_repID + "_" + g + ".vcf");
+		// subsampling in each population and combine in one vcf output file format
+       pop1 = sample(p1.individuals, 10, replace=F);
+       pop2 = sample(p2.individuals, 10, replace=F); 
+       i_sample = c(pop1, pop2);
+       i_sample.haplosomes.outputHaplosomesToVCF(filePath = d_folder + "/" + d_s + "_" + d_m + "_both_rep" + d_repID + "_" + g + ".vcf");
+	}
+}
+
