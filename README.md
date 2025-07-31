@@ -4,7 +4,7 @@
 
 Scripts directory contains SLiM scripts to run simulations to reproduce data for Figures 1-3, as well as R scripts to run ABC inference, and python script for calculating summary statistics from vcf files. Finally, plot_figures.ipynb contains jupyter notebook for plotting figures.
 
-selection_trajectories.tar.gz contains mutation frequencies and estimates of Tajima's D and haplotype diversity from simulated data to produce Figure 1.
+selection_trajectories.tar.gz contains mutation frequencies (.bs files) and estimates of Tajima's D and haplotype diversity (stats.txt) from simulated data to produce Figure 1.
 
 contraction_stats.tar.gz contains summary statistics from population contraction simulations to produce Figure 2.
 
